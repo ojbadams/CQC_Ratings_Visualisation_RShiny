@@ -1,0 +1,117 @@
+---
+title: "EDA"
+author: '16009480'
+date: "13/03/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+Firstly, we'll look at the cqcData. Each row is a healthcare facility in England and each has information about the location (i.e. location details), information about the facility (i.e. owner) and most importantly about the rating itself. 
+
+The lat an long were added in previous R code. It is known there are some missing values. 
+
+The regions will be the same as the region information in money csv
+
+
+
+```{r CQC Ratings}
+cqcData = read.csv("/home/ojba/Documents/University_Work/DALT7016/rshiny_NHS_data/Data_Files/cqc_long_lat.csv")
+
+names(cqcData)
+unique(cqcData$Domain)
+unique(cqcData$Location.Region)
+
+
+```
+
+## Understanding CQC data
+
+Want to see: 
+- Total ratings (including by regions)
+- Facilities by region
+- Identify Missing Data
+- Healthcare Facilities
+
+#Info (from below)
+- 74186 total ratings. 
+- First graph for total ratings by region 
+- Wales was dropped as it is psuesdo 
+- Graphs of ratings, percentage shows that London and Yorkshire have the most Good ratings. 
+North east has the most outstanding
+-Missing Data - for the most important columns looks fine, 212 missing lat and long values, this was an issues in lat long lib. 
+
+```{r pressure, echo=FALSE}
+library(dplyr)
+library(ggplot2)
+
+cqcData = cqcData[which(cqcData$Location.Region!="(pseudo) Wales"), ]
+dim(cqcData)
+total_ratings = cqcData %>% count(Latest.Rating)
+ggplot(data = total_ratings, aes(x = Latest.Rating, y = n) ) + geom_bar(stat = "identity", color = "blue", fill = "blue")
+
+by_region = cqcData %>% count(Location.Region, Latest.Rating, sort = T) %>% arrange(Latest.Rating)
+ggplot(data = by_region, aes(fill = Latest.Rating, x = Location.Region, y = n), width = 1000) + geom_bar( stat = "identity", width = 0.5) + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+
+by_region = cqcData %>% count(Location.Region, Latest.Rating, sort = T) %>% arrange(Latest.Rating)
+ggplot(data = by_region, aes(fill = Latest.Rating, x = Location.Region, y = n)) + geom_col(position = "fill") + theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+
+
+sum(is.na(cqcData$Location.Region))
+sum(is.na(cqcData$Latest.Rating))
+sum(is.na(cqcData$Location.Post.Code))
+sum(is.na(cqcData$lat))
+sum(is.na(cqcData$long))
+sum(is.na(cqcData$Location.Name))
+sum(is.na(cqcData$Provider.Name))
+sum(is.na(cqcData$URL))
+
+missingLatLong = cqcData[which(is.na(cqcData$lat) & is.na(cqcData$long)), ]
+missingLatLong$Location.ID
+
+```
+## We also want to check to see the distribution of institutions
+
+
+```{r fig.height=7, fig.width=15}
+levels(cqcData$Location.Primary.Inspection.Category)
+
+by_category = cqcData %>% count(Location.Primary.Inspection.Category, sort = T)
+
+by_category_no_GP_Social_Care = by_category[-which(by_category$Location.Primary.Inspection.Category == "GP Practices" | by_category$Location.Primary.Inspection.Category == "Community based adult social care services"), ]
+
+ggplot(by_category, aes(x="", y = n, fill = Location.Primary.Inspection.Category)) + geom_bar(width = 1, stat = "identity") + coord_polar("y", start = 0) + theme(legend.position = "bottom", legend.text = element_text(size = 7))
+
+ggplot(by_category, aes(x=reorder(Location.Primary.Inspection.Category, -n), y =n )) + geom_bar(width = 0.8, stat = "identity")+ theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+
+ggplot(by_category_no_GP_Social_Care, aes(x=reorder(Location.Primary.Inspection.Category, -n), y =n )) + geom_bar(width = 0.8, stat = "identity")+ theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+
+```
+
+## We can then check out the funding data. 
+
+```{r}
+fundingData = read.csv("final_pop_fund_data.csv")
+names(fundingData)
+
+
+```
+```{r}
+fundingYearData = fundingData[c("X2015.16", "X2016.17", "X2017.18", "X2018.19", "X2019.20")]
+
+
+fundingYearData = data.frame(t(fundingYearData[-1]))
+colnames(fundingYearData) = fundingData$NUTS.Region
+fundingYearData$Date = rownames(fundingYearData)
+rownames(fundingYearData) = 1:4
+
+ggplot(data = fundingYearData, aes(x = Date, y = NORTHWEST, group = 1)) + geom_line() + labs(x = date, y = "NORTH WEST")
+
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
