@@ -3,7 +3,7 @@
 This is a collection of code to visualise CQC ratings in England compared to region funding and funding per capita. 
 
 ## Running the Code
-The code doesn't seem to run currently - it used to run previously but I'm unlikely to revisit this project to check
+The code doesn't seem to run currently - it used to run previously but I'm unlikely to revisit this project to check what's not working with it as I'm not as profficient in R. 
 
 ## Some pictures of what it should look like
 ![Screenshot](https://github.com/ojbadams/CQC_Ratings_Visualisation_RShiny/blob/main/rshiny_app_1.png?raw=true)
